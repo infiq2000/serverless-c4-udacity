@@ -1,5 +1,5 @@
 # TODO: Change the name of the org
-org: datht20
+org: infiq2000
 app: serverless-todo-app
 service: serverless-todo-app
 
@@ -7,10 +7,10 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
-
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs18.x
+  profile: project4
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
 
@@ -204,6 +204,11 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.S3_BUCKET}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
         CorsConfiguration:
           CorsRules:
             - AllowedOrigins:
