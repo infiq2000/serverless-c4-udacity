@@ -3,16 +3,17 @@ import 'source-map-support/register'
 
 import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-import Axios from 'axios'
 import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import axios from 'axios'
 
 const logger = createLogger('auth')
 
 // TODO: Provide a URL that can be used to download a certificate that can be used
 // to verify JWT token signature.
 // To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
-const jwksUrl = '...'
+const jwksUrl =
+  'https://dev-tods4bosp3gwxtsw.us.auth0.com/.well-known/jwks.json'
 
 export const handler = async (
   event: CustomAuthorizerEvent
@@ -58,9 +59,22 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
   const token = getToken(authHeader)
   const jwt: Jwt = decode(token, { complete: true }) as Jwt
 
-  // TODO: Implement token verification
-  // You should implement it similarly to how it was implemented for the exercise for the lesson 5
-  // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
+  try {
+    const res = await axios.get(jwksUrl)
+    const keys = res.data.keys
+    const key = keys.find((k) => k.kid === jwt.header.kid)
+    if (!key) {
+      logger.error('Key not found', { keyId: jwt.header.kid })
+      throw new Error('Key not found')
+    }
+    const pem = key.x5c[0]
+    const cert = `-----BEGIN CERTIFICATE-----\n${pem}\n-----END CERTIFICATE-----`
+
+    const verifiedToken = verify(token, cert) as JwtPayload
+    return verifiedToken
+  } catch (error) {
+    logger.error('Token verification failed', { error })
+  }
   return undefined
 }
 
