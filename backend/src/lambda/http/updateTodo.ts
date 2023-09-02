@@ -14,13 +14,13 @@ export const handler = middy(
     const todoId = event.pathParameters.todoId
     const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
     // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
-    await updateTodo(updatedTodo, userId, todoId)
+    const update = await updateTodo(updatedTodo, userId, todoId)
     return {
       statusCode: 202,
       headers: {
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({})
+      body: JSON.stringify(update)
     }
     //return undefined
   }
